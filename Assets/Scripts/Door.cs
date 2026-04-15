@@ -68,9 +68,9 @@ public class Door : MonoBehaviour, IInteractable
     public string GetInteractText()
     {
         if (!isOpen)
-            return "'E' Open";
+            return "[E] Open";
         else
-            return "'E' Close";
+            return "[E] Close";
     }
 
 

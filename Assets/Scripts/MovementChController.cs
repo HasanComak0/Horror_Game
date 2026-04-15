@@ -45,7 +45,9 @@ public class MovementChController : MonoBehaviour
     [SerializeField] private float crouchPos = 0.2f;
 
     [Header("Footstep Settings")]
-    [SerializeField] private List<AudioClip> walkSteps = new List<AudioClip>();
+    [SerializeField] private List<AudioClip> defaultWalkSteps = new List<AudioClip>();
+    [SerializeField] private List<AudioClip> woodWalkSteps = new List<AudioClip>();
+    [SerializeField] private List<AudioClip> metalWalkSteps= new List<AudioClip>();
     //[SerializeField] private List<AudioClip> metalWalkSteps = new List<AudioClip>(); //YÜZEY KONTROLÜ YAPINCA EKLENECEK.
     private AudioSource audioSource;
     private float footStepTimer;
@@ -84,7 +86,7 @@ public class MovementChController : MonoBehaviour
         SetCrouching();
         GetMouseAxis();
         Movement();
-        Jumping();
+        //Jumping();
     }
     private void Movement()
     {
@@ -112,30 +114,72 @@ public class MovementChController : MonoBehaviour
     }
     private void doFootStep()
     {
-        if (audioSource == null || walkSteps.Count == 0) return;
+
+        if (audioSource == null || defaultWalkSteps == null || woodWalkSteps == null || metalWalkSteps==null) return;
 
         footStepTimer -= Time.deltaTime;
+
         if (footStepTimer <= 0)
         {
+            List<AudioClip> currentList = defaultWalkSteps;
+            RaycastHit hit;
+
+            if (Physics.Raycast(transform.position, Vector3.down, out hit, 1.5f))
+            {
+                Debug.DrawRay(transform.position, Vector3.down * 3f, Color.red);
+
+                if (hit.collider != null)
+                {
+                    if (hit.collider.CompareTag("WoodenFloor")) currentList = woodWalkSteps;
+                    else if (hit.collider.CompareTag("MetalFloor")) currentList = metalWalkSteps;
+                }
+            }
+
+            if (currentList == null || currentList.Count == 0)
+            {
+                Debug.LogError("Ses listesi boþ");
+                return;
+            }
+
+            if (currentList == null || currentList.Count == 0) return;
+
+            float volume = 0.5f;
+            float interval = 0.65f;
 
             if (isCrouching)
             {
-                audioSource.PlayOneShot(walkSteps[Random.Range(0, walkSteps.Count)]);
-                audioSource.volume = 0.25f * masterVolume;
-                footStepTimer = 0.9f;
+                volume = 0.25f;
+                interval = 0.9f;
             }
             else if (isRunning)
             {
-                audioSource.PlayOneShot(walkSteps[Random.Range(0, walkSteps.Count)]);
-                audioSource.volume = 1f * masterVolume;
-                footStepTimer = 0.35f;
+                volume = 1f;
+                interval = 0.35f;
             }
-            else
-            {
-                audioSource.PlayOneShot(walkSteps[Random.Range(0, walkSteps.Count)]);
-                audioSource.volume = 0.5f * masterVolume;
-                footStepTimer = 0.65f;
-            }
+            audioSource.volume = volume * masterVolume;
+            audioSource.PlayOneShot(currentList[Random.Range(0, currentList.Count)]);
+
+            // Timer'ý güncelle
+            footStepTimer = interval;
+
+            //if (isCrouching)
+            //{
+            //    audioSource.PlayOneShot(defaultWalkSteps[Random.Range(0, defaultWalkSteps.Count)]);
+            //    audioSource.volume = 0.25f * masterVolume;
+            //    footStepTimer = 0.9f;
+            //}
+            //else if (isRunning)
+            //{
+            //    audioSource.PlayOneShot(defaultWalkSteps[Random.Range(0, defaultWalkSteps.Count)]);
+            //    audioSource.volume = 1f * masterVolume;
+            //    footStepTimer = 0.35f;
+            //}
+            //else
+            //{
+            //    audioSource.PlayOneShot(defaultWalkSteps[Random.Range(0, defaultWalkSteps.Count)]);
+            //    audioSource.volume = 0.5f * masterVolume;
+            //    footStepTimer = 0.65f;
+            //}
         }
 
     }
@@ -168,14 +212,15 @@ public class MovementChController : MonoBehaviour
     {
         //GELÝÞTÝRÝLMEK ÝSTENÝRSE RAYCAST YERÝNE BAÞKA BÝRÞEY KULLANMAM LAZIM ÇOK ÝNCE OLDUUÐU ÝÇÝN BAZEN YUKARI DEÐEMÝYO
 
-        stillCrouching = Physics.Raycast(CameraHolder.transform.position + (Vector3.up * 0.15f), Vector3.up, RayDistance, ~(1 << LayerMask.NameToLayer("Player")));
-        Debug.DrawRay(CameraHolder.transform.position + (Vector3.up * 0.15f), Vector3.up * RayDistance, Color.red);
+       
 
 
         // 1. Hedef boyu belirle
         float targetHeight;
         if (Input.GetKey(KeyCode.LeftControl) || stillCrouching)
         {
+            stillCrouching = Physics.Raycast(CameraHolder.transform.position + (Vector3.up * 0.15f), Vector3.up, RayDistance, ~(1 << LayerMask.NameToLayer("Player")));
+            Debug.DrawRay(CameraHolder.transform.position + (Vector3.up * 0.15f), Vector3.up * RayDistance, Color.red);
             targetHeight = crouchHeight;
             currentSpeed = Mathf.Lerp(currentSpeed, crouchingSpeed, increaseTime);//eðilince karakterin hýzýný düþürdüm
             bobbing.BobSpeed = 7;

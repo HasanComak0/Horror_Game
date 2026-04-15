@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - HandHolder
+  - WoodenFloor
+  - MetalFloor
   layers:
   - Default
   - TransparentFX

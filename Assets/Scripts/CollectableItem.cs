@@ -49,7 +49,7 @@ public class CollectableItem : MonoBehaviour,IInteractable
 
     public string GetInteractText()
     {
-        return "'E' Flash Light";
+        return "[E] Flash Light";
     }
 
 }
